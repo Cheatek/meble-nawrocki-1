@@ -57,8 +57,10 @@ img{width:auto; max-width:100%; height:auto; margin:0; padding:0; border:none; l
 
 /* Fonts
 --------------------------------------------------------------------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap');
+
 body, input, textarea, select{font-family:Verdana, Geneva, sans-serif;}
-h1, h2, h3, h4, h5, h6, .heading{font-family:Georgia, "Times New Roman", Times, serif;}
+h1, h2, h3, h4, h5, h6, .heading{font-family:'Caveat', cursive;}
 
 
 /* Forms
@@ -73,7 +75,7 @@ label{margin-bottom:5px;}
 
 /* Generalise
 --------------------------------------------------------------------------------------------------------------- */
-h1, h2, h3, h4, h5, h6, .heading{margin:0 0 20px 0; font-size:1.4rem; line-height:normal; font-weight:normal; text-transform:uppercase;}
+h1, h2, h3, h4, h5, h6, .heading{margin:0 0 20px 0; font-size:1.6rem; line-height:normal; font-weight:700; text-transform:none;}
 
 .heading.nospace{margin-bottom:0;}
 .heading.underline{display:inline-block; position:relative; padding:0 0 15px 0;}
