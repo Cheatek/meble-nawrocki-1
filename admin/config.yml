@@ -1,0 +1,65 @@
+backend:
+  name: github
+  repo: Cheatek/meble-nawrocki-1
+  branch: __CMS_BRANCH__
+  base_url: https://api.netlify.com
+  auth_endpoint: auth
+  site_domain: __CMS_SITE_DOMAIN__
+
+publish_mode: editorial_workflow
+locale: pl
+media_folder: images/uploads
+public_folder: /images/uploads
+media_library:
+  config:
+    max_file_size: 20971520
+slug:
+  encoding: ascii
+  clean_accents: true
+  sanitize_replacement: "-"
+
+collections:
+  - name: gallery
+    label: Galeria
+    description: Dodaj zdjęcia, opisy i ustaw kolejność. Zapisz wersję roboczą, sprawdź podgląd wdrożenia, a następnie opublikuj.
+    editor:
+      preview: false
+    files:
+      - name: photos
+        label: Zdjęcia realizacji
+        file: data/gallery.json
+        format: json
+        preview_path: gallery.html
+        fields:
+          - name: photos
+            label: Zdjęcia
+            label_singular: Zdjęcie
+            widget: list
+            collapsed: true
+            summary: "{{fields.alt}}"
+            hint: Kolejność na liście to kolejność w galerii. Przeciągnij pozycje, aby ją zmienić.
+            fields:
+              - name: image
+                label: Zdjęcie
+                widget: image
+                choose_url: false
+                hint: JPEG, PNG lub WebP, maksymalnie 20 MB i 40 megapikseli. Przed wysłaniem usuń dane lokalizacji.
+                media_library:
+                  allow_multiple: false
+                  config:
+                    max_file_size: 20971520
+                pattern:
+                  - '^/?images/(galery|uploads)/[^\\?#]+\.(jpg|jpeg|png|webp|JPG|JPEG|PNG|WEBP)$'
+                  - Wybierz lokalne zdjęcie JPEG, PNG lub WebP.
+              - name: alt
+                label: Opis zdjęcia
+                widget: string
+                hint: Opisz widoczne meble, np. rodzaj, kolor i wykończenie. Nie wpisuj danych klienta.
+                pattern:
+                  - '^.{1,300}$'
+                  - Wpisz opis o długości od 1 do 300 znaków.
+              - name: category
+                label: Kategoria
+                widget: select
+                options: [Kuchnie, Szafy, Zabudowy, Inne]
+                default: Inne

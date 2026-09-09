@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Dodawanie zdjęć — Meble Nawrocki</title>
+  <link href="../layout/styles/layout.css" rel="stylesheet">
+</head>
+<body>
+<main class="hoc container clear">
+  <h1>Dodawanie zdjęć do galerii</h1>
+  <p><a href="./">Otwórz edytor</a> · <a href="../gallery.html">Zobacz galerię</a></p>
+  <h2>Instrukcja dla właściciela</h2>
+  <ol>
+    <li>Zaloguj się w edytorze kontem GitHub z prawem zapisu do repozytorium.</li>
+    <li>Otwórz <strong>Galeria → Zdjęcia realizacji</strong> i dodaj pozycję do listy.</li>
+    <li>Wybierz lub prześlij zdjęcie JPEG, PNG albo WebP.
+      Powtórz dodawanie pozycji dla każdego kolejnego zdjęcia.</li>
+    <li>Wpisz krótki opis widocznych mebli i wybierz kategorię. Przeciągnij pozycje,
+      aby zmienić ich kolejność. Pierwsza pozycja pojawi się jako pierwsza w galerii.</li>
+    <li>Zapisz wersję roboczą. W panelu przepływu pracy przekaż ją do sprawdzenia.
+      Zaczekaj na poprawne sprawdzenie kompilacji i podgląd wdrożenia w GitHub/Netlify.
+      Otwórz w podglądzie <strong>gallery.html</strong> i sprawdź zdjęcia na telefonie.</li>
+    <li>Po sprawdzeniu wybierz publikację. Zmiana zostaje zapisana w gałęzi skonfigurowanej
+      dla edytora, a hosting buduje nową stronę. Na stronie testowej nie oznacza to publikacji
+      w witrynie produkcyjnej — właściciel musi osobno scalić gałąź.</li>
+  </ol>
+  <p>Limit zdjęcia to 20 MB i 40 megapikseli. Animacje, SVG, HEIC i pliki innych typów
+    nie są obsługiwane. Na telefonie wyeksportuj HEIC jako JPEG.
+    Błędny plik zatrzyma nowe wdrożenie; ostatnia poprawna wersja pozostaje dostępna.</p>
+  <p><strong>Prywatność:</strong> przed wysłaniem usuń lokalizację GPS i inne prywatne dane,
+    unikaj twarzy, adresów i dokumentów klientów. Publiczna strona otrzymuje pomniejszone
+    obrazy bez metadanych, ale oryginały pozostają w historii Git i mogą być publiczne,
+    jeśli repozytorium jest publiczne.</p>
+  <p>Usunięcie pozycji z listy usuwa ją z galerii po publikacji. Nie usuwaj z biblioteki
+    zdjęcia używanego przez inne pozycje. Usunięcie pliku nie usuwa go z historii Git.</p>
+
+  <section lang="en">
+    <h2>One-time hosting and authentication setup</h2>
+    <p>This repository remains a static website. The editor is Decap CMS with GitHub
+      authentication; it does not provide a public upload endpoint. The recommended
+      deployment is Netlify, which supplies builds, deploy previews and an OAuth broker.
+      These external services are not provisioned by this change.</p>
+    <ol>
+      <li>Connect this repository to a Netlify site. For testing, choose the feature branch
+        as the site's production branch, preferably on a separate test site. Do not switch
+        your live site or merge into master until you have reviewed the result.</li>
+      <li>Use Node.js 24, build command <code>npm run build</code>, and publish directory
+        <code>_site</code>. These settings are in <code>netlify.toml</code>.
+        Enable Deploy Previews for CMS-created pull requests.</li>
+      <li>Follow the
+        <a href="https://decapcms.org/docs/github-backend/">Decap GitHub backend guide</a>
+        to register a GitHub OAuth application and configure the GitHub authentication
+        provider in Netlify. With Netlify's broker the callback is
+        <code>https://api.netlify.com/auth/done</code>. Store the OAuth secret only in
+        Netlify's provider settings, never in this repository or client-side configuration.
+        Use a dedicated editor account with access only to the repositories it needs.</li>
+      <li>Set <code>CMS_SITE_DOMAIN</code> to the canonical hostname of the Netlify site
+        registered for OAuth (without a scheme or path). On Netlify the build otherwise
+        derives it from <code>URL</code>. Use the same canonical OAuth hostname for previews,
+        not a deploy-preview hostname.</li>
+      <li>The generated CMS configuration targets the branch being built. Optionally set
+        <code>CMS_BRANCH</code> explicitly to an existing content branch. Do not point a
+        test site's editor at master. After you manually merge, configure production to
+        build and edit your intended production branch, and remove any test-branch override.</li>
+      <li>Give the editor's GitHub account repository write access. Keep branch protection
+        and required build checks enabled as appropriate; publishing requires permission
+        to merge the CMS pull request. An unauthenticated visitor cannot write content.</li>
+      <li>Test login, adding a photo, ordering, draft preview and publishing on the test
+        branch before using the live editor. OAuth and deployment cannot be verified
+        from a local build alone.</li>
+    </ol>
+    <h2>Other hosting and local use</h2>
+    <p>Run <code>npm ci</code>, <code>npm test</code> and <code>npm run build</code>
+      from the repository root. Serve <code>_site</code> with a static HTTP server.
+      Publish only <code>_site</code>, not the repository root: the build generates
+      gallery HTML, thumbnails and sanitized display images. The public gallery needs
+      neither JavaScript nor a running Node.js server.</p>
+    <p>For an archive or detached checkout, set <code>CMS_BRANCH</code> to the intended
+      existing branch before building. The source <code>admin/config.yml</code> contains
+      build-time placeholders and is not a deployable configuration.</p>
+    <p>The source gallery keeps the existing photos as a compatibility fallback.
+      New CMS changes appear only in the generated site, so enable the build before
+      using the editor; do not maintain the fallback list as a second content source.</p>
+    <p>On another static host, arrange an automatic build after content commits and either
+      configure Netlify's OAuth broker for your site or supply a trusted HTTPS OAuth
+      service by changing <code>backend.base_url</code> and <code>backend.auth_endpoint</code>
+      in <code>admin/config.yml</code>. Never put a GitHub token or OAuth client secret in
+      that file. GitHub Pages' default source-folder publishing does not run this Node build;
+      it requires a separate workflow publishing the generated directory.</p>
+    <p>The editor loads a pinned Decap CMS release from jsDelivr; the public site does not.
+      Network access to that CDN and GitHub/Netlify authentication is required for editing.
+      When upgrading Decap, update its version and script integrity hash together.</p>
+    <h2>Content and rollback</h2>
+    <p><code>data/gallery.json</code> is the gallery's source of truth. Each item has
+      an image path, alternative text and category; list order is display order.
+      Existing descriptions are generic and should be refined by someone familiar
+      with the photographed projects. Adding a file to the media library alone does
+      not add it to the gallery.</p>
+    <p>To undo a publication, revert the content commit in GitHub and let hosting rebuild.
+      A hosting rollback can restore the previous deployment immediately, but also revert
+      the content so the next build does not republish it. Check both gallery metadata
+      and any image files when restoring a previous version.</p>
+  </section>
+</main>
+</body>
+</html>
