@@ -225,24 +225,29 @@ test('animated WebP and images over 40 megapixels are rejected', async t => {
   await assert.rejects(readImage(root, 'images/oversized.png'), /pixel limit|oversized/i);
 });
 
-test('migration preserves exactly 45 original entries with corrected existing references', async () => {
+test('editable gallery data validates and references existing image files', async () => {
   const data = JSON.parse(await readFile(path.join(repository, 'data/gallery.json'), 'utf8'));
   const photos = validateGallery(data);
+  for (const entry of photos) assert.ok((await stat(path.join(repository, entry.image))).isFile());
+});
+
+test('frozen source fallback preserves the original migration independently of editable data', async () => {
   const expected = [
     'x4.JPG', 'x5.JPG', 'x6.JPG', 'x3.JPG', 'xx.jpg', 'xx1.jpg', 'xx2.jpg', 'xx4.jpg',
     ...Array.from({ length: 24 }, (_, index) => `image${index + 1}.jpg`),
     ...Array.from({ length: 10 }, (_, index) => `${index + 25}.jpg`),
     'x1.JPG', 'x2.JPG', 'xx5.jpg'
   ];
-  assert.equal(photos.length, 45);
-  assert.deepEqual(photos.map(entry => path.basename(entry.image)), expected);
-  for (const entry of photos) assert.ok((await stat(path.join(repository, entry.image))).isFile());
   const template = await readFile(path.join(repository, 'gallery.html'), 'utf8');
   const fallback = template.split('<!-- GALLERY:START -->')[1].split('<!-- GALLERY:END -->')[0];
   const entries = [...fallback.matchAll(/<a href="([^"]+)"><img src="([^"]+)" alt="([^"]+)"/g)];
   assert.equal(entries.length, 45);
-  assert.deepEqual(entries.map(([, href, src, alt]) => ({ href, src, alt })),
-    photos.map(entry => ({ href: entry.image, src: entry.image, alt: entry.alt })));
+  assert.deepEqual(entries.map(([, href]) => path.basename(href)), expected);
+  for (const [, href, src, alt] of entries) {
+    assert.equal(href, src);
+    assert.ok(alt.trim());
+    assert.ok((await stat(path.join(repository, imagePath(src)))).isFile());
+  }
   assert.match(fallback, /class="nospace gallery-grid"/);
   assert.doesNotMatch(fallback, /one_quarter|class="[^"]*\bfirst\b/);
   assert.doesNotMatch(replaceGallery(template, renderGallery([], new Map())), /<img/);
@@ -301,6 +306,36 @@ test('empty gallery builds and unpublished original photos are excluded', async 
   assert.equal(result.images, 1);
   assert.match(await readFile(path.join(result.output, 'gallery.html'), 'utf8'), /Nowe realizacje/);
   await assert.rejects(stat(path.join(result.output, 'images/photo.jpg')), /ENOENT/);
+});
+
+test('CMS additions, removals, reordering and description edits rebuild without changing the fallback', async t => {
+  const second = { ...photo, image: '/images/second.jpg', alt: 'Druga realizacja' };
+  const added = { ...photo, image: '/images/uploads/new.jpg', alt: 'Nowa realizacja' };
+  const edited = { ...added, alt: 'Zmieniony opis "mebli" & <szafy>', category: 'Szafy' };
+  const root = await siteFixture(t, [photo, second]);
+  await writeFile(path.join(root, 'images/second.jpg'), await jpeg());
+  await mkdir(path.join(root, 'images/uploads'));
+  await writeFile(path.join(root, 'images/uploads/new.jpg'), await jpeg());
+  const fallback = await readFile(path.join(root, 'gallery.html'), 'utf8');
+
+  for (const photos of [
+    [photo, second],
+    [photo, second, added],
+    [second, added],
+    [added, second],
+    [edited, second]
+  ]) {
+    await writeFile(path.join(root, 'data/gallery.json'), JSON.stringify({ photos }));
+    const result = await build({ root, branch: 'cms/edits', env: {} });
+    const html = await readFile(path.join(result.output, 'gallery.html'), 'utf8');
+    const entries = [...html.matchAll(/<li><a href="([^"]+)"><img [^>]*alt="([^"]+)"/g)];
+    assert.equal(result.photos, photos.length);
+    assert.deepEqual(entries.map(([, href, alt]) => ({ href, alt })),
+      photos.map(entry => ({ href: imagePath(entry.image), alt: escapeHtml(entry.alt) })));
+    assert.doesNotMatch(html, /stale\.jpg/);
+    assert.equal(await readFile(path.join(root, 'gallery.html'), 'utf8'), fallback);
+  }
+  await assert.rejects(stat(path.join(root, '_site/images/photo.jpg')), /ENOENT/);
 });
 
 test('build rejects output and static asset symlink traversal', async t => {
