@@ -48,8 +48,10 @@ File: Layout CSS
 --------------------------------------------------------------------------------------------------------------- */
 #header{}
 
-#header #logo{margin:18px 0 0 0;}
+#header #logo{margin:10px 0 0 0;}
 #header #logo h1{margin:0; padding:0; font-size:2.8rem; text-transform:none; letter-spacing:.02em;}
+#header #logo h1 a{display:flex; align-items:center; gap:14px;}
+#header #logo img{width:58px; height:58px; flex:0 0 58px;}
 
 
 /* Page Intro
@@ -522,6 +524,9 @@ table a, #comments a{background-color:inherit;}
 
 	#header{text-align:center;}
 	#header #logo{margin:0 0 15px 0;}
+	#header #logo h1{font-size:1.9rem;}
+	#header #logo h1 a{justify-content:center; gap:10px;}
+	#header #logo img{width:48px; height:48px; flex-basis:48px;}
 
 	#pageintro article, #pageintro article p{max-width:none;}
 	#pageintro .heading{font-size:2rem;}
