@@ -1,0 +1,17 @@
+{
+  "name": "meble-nawrocki-1",
+  "version": "1.0.0",
+  "description": "Static furniture website with a Git-backed gallery editor",
+  "scripts": {
+    "test": "node --test",
+    "build": "node scripts/build.mjs"
+  },
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "sharp": "0.35.4"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
