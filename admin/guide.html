@@ -36,41 +36,120 @@
   <p>Usunięcie pozycji z listy usuwa ją z galerii po publikacji. Nie usuwaj z biblioteki
     zdjęcia używanego przez inne pozycje. Usunięcie pliku nie usuwa go z historii Git.</p>
 
-  <section lang="en">
-    <h2>One-time hosting and authentication setup</h2>
-    <p>This repository remains a static website. The editor is Decap CMS with GitHub
-      authentication; it does not provide a public upload endpoint. The recommended
-      deployment is Netlify, which supplies builds, deploy previews and an OAuth broker.
-      These external services are not provisioned by this change.</p>
+  <section>
+    <h2>Jednorazowa konfiguracja logowania przez GitHub</h2>
+    <p>Te kroki wykonuje administrator strony tylko raz. Strona jest już wdrażana przez
+      Netlify, dlatego nie twórz drugiej witryny i nie zmieniaj serwerów DNS. Potrzebujesz
+      dostępu administracyjnego do projektu tej strony w Netlify oraz konta GitHub z prawem
+      zapisu do repozytorium <code>Cheatek/meble-nawrocki-1</code>.</p>
+
+    <h3>1. Sprawdź projekt strony w Netlify</h3>
     <ol>
-      <li>Connect this repository to a Netlify site. For testing, choose the feature branch
-        as the site's production branch, preferably on a separate test site. Do not switch
-        your live site or merge into master until you have reviewed the result.</li>
-      <li>Use Node.js 24, build command <code>npm run build</code>, and publish directory
-        <code>_site</code>. These settings are in <code>netlify.toml</code>.
-        Enable Deploy Previews for CMS-created pull requests.</li>
-      <li>Follow the
-        <a href="https://decapcms.org/docs/github-backend/">Decap GitHub backend guide</a>
-        to register a GitHub OAuth application and configure the GitHub authentication
-        provider in Netlify. With Netlify's broker the callback is
-        <code>https://api.netlify.com/auth/done</code>. Store the OAuth secret only in
-        Netlify's provider settings, never in this repository or client-side configuration.
-        Use a dedicated editor account with access only to the repositories it needs.</li>
-      <li>Set <code>CMS_SITE_DOMAIN</code> to the canonical hostname of the Netlify site
-        registered for OAuth (without a scheme or path). On Netlify the build otherwise
-        derives it from <code>URL</code>. Use the same canonical OAuth hostname for previews,
-        not a deploy-preview hostname.</li>
-      <li>The generated CMS configuration targets the branch being built. Optionally set
-        <code>CMS_BRANCH</code> explicitly to an existing content branch. Do not point a
-        test site's editor at master. After you manually merge, configure production to
-        build and edit your intended production branch, and remove any test-branch override.</li>
-      <li>Give the editor's GitHub account repository write access. Keep branch protection
-        and required build checks enabled as appropriate; publishing requires permission
-        to merge the CMS pull request. An unauthenticated visitor cannot write content.</li>
-      <li>Test login, adding a photo, ordering, draft preview and publishing on the test
-        branch before using the live editor. OAuth and deployment cannot be verified
-        from a local build alone.</li>
+      <li>Wejdź na <a href="https://app.netlify.com/">app.netlify.com</a> i zaloguj się.</li>
+      <li>Kliknij <strong>Projects</strong>, a następnie projekt obsługujący domenę
+        <strong>meble-nawrocki.pl</strong>. Jeśli nie wiesz, który to projekt, otwieraj
+        projekty i sprawdzaj domenę widoczną pod nazwą projektu.</li>
+      <li>W lewym menu kliknij <strong>Project configuration</strong>, potem
+        <strong>Build &amp; deploy</strong> i <strong>Continuous deployment</strong>.</li>
+      <li>Sprawdź, czy połączone repozytorium to
+        <code>Cheatek/meble-nawrocki-1</code>, a gałąź produkcyjna to
+        <code>master</code>. Nie zmieniaj tych wartości.</li>
+      <li>Ustawienia budowania są zapisane w pliku <code>netlify.toml</code>:
+        Node.js 24, polecenie <code>npm run build</code> i katalog publikacji
+        <code>_site</code>. Nie ustawiaj publikacji bezpośrednio z katalogu repozytorium.</li>
     </ol>
+
+    <h3>2. Utwórz aplikację OAuth na GitHubie</h3>
+    <ol>
+      <li>Otwórz <a href="https://github.com/settings/developers">ustawienia deweloperskie
+        GitHuba</a>. Możesz też kliknąć zdjęcie profilowe w prawym górnym rogu GitHuba,
+        następnie <strong>Settings → Developer settings → OAuth Apps</strong>.</li>
+      <li>Kliknij <strong>New OAuth App</strong> albo <strong>Register a new application</strong>.</li>
+      <li>Wypełnij formularz dokładnie tak:
+        <ul>
+          <li><strong>Application name:</strong> <code>Meble Nawrocki CMS</code></li>
+          <li><strong>Homepage URL:</strong> <code>https://meble-nawrocki.pl</code></li>
+          <li><strong>Application description:</strong> można pozostawić puste</li>
+          <li><strong>Authorization callback URL:</strong>
+            <code>https://api.netlify.com/auth/done</code></li>
+        </ul>
+      </li>
+      <li>Kliknij <strong>Register application</strong>.</li>
+      <li>Na stronie utworzonej aplikacji skopiuj <strong>Client ID</strong>. Następnie
+        kliknij <strong>Generate a new client secret</strong> i od razu skopiuj sekret.
+        GitHub nie pokaże go ponownie po opuszczeniu strony.</li>
+    </ol>
+    <p><strong>Uwaga:</strong> sekretu nie wpisuj do repozytorium, pliku
+      <code>config.yml</code>, wiadomości e-mail ani komunikatora. Wkleisz go wyłącznie
+      w chronionym formularzu Netlify w następnym kroku.</p>
+
+    <h3>3. Podłącz aplikację GitHub w Netlify</h3>
+    <ol>
+      <li>Wróć do projektu <strong>meble-nawrocki.pl</strong> w Netlify.</li>
+      <li>Kliknij <strong>Project configuration → Access &amp; security → OAuth</strong>.</li>
+      <li>W sekcji <strong>Authentication Providers</strong> kliknij
+        <strong>Install Provider</strong>.</li>
+      <li>Wybierz <strong>GitHub</strong>, wklej skopiowane wcześniej wartości
+        <strong>Client ID</strong> i <strong>Client Secret</strong>, a następnie kliknij
+        przycisk zapisania lub instalacji dostawcy.</li>
+    </ol>
+    <p>Ten projekt używa backendu <code>github</code>. Nie włączaj na potrzeby tej
+      instrukcji <strong>Netlify Identity</strong> ani <strong>Git Gateway</strong> —
+      dotyczą one innego wariantu konfiguracji Decap CMS.</p>
+
+    <h3>4. Ustaw domenę CMS w Netlify</h3>
+    <ol>
+      <li>W projekcie Netlify kliknij <strong>Project configuration → Environment variables</strong>.</li>
+      <li>Kliknij <strong>Add a variable</strong> albo <strong>Add environment variable</strong>.</li>
+      <li>W polu <strong>Key</strong> wpisz <code>CMS_SITE_DOMAIN</code>, a w polu
+        <strong>Value</strong> wpisz <code>meble-nawrocki.pl</code> — bez
+        <code>https://</code>, ukośnika i dalszej części adresu.</li>
+      <li>Udostępnij zmienną dla produkcji i podglądów wdrożeń, następnie kliknij
+        <strong>Save</strong>.</li>
+      <li>Nie dodawaj zmiennej <code>CMS_BRANCH</code>. Produkcja automatycznie używa
+        właściwej gałęzi <code>master</code>.</li>
+      <li>Przejdź do <strong>Deploys</strong>, kliknij <strong>Trigger deploy</strong>,
+        potem <strong>Deploy site</strong>. Zaczekaj, aż najnowsze wdrożenie będzie miało
+        zielony status <strong>Published</strong>.</li>
+    </ol>
+
+    <h3>5. Sprawdź logowanie i publikację</h3>
+    <ol>
+      <li>Otwórz <a href="https://meble-nawrocki.pl/admin/">meble-nawrocki.pl/admin/</a>
+        w prywatnym oknie przeglądarki, aby nie użyć starej sesji lub konfiguracji z pamięci.</li>
+      <li>Kliknij <strong>Login with GitHub</strong> albo <strong>Zaloguj przez GitHub</strong>.</li>
+      <li>Jeśli GitHub pokaże ekran autoryzacji aplikacji
+        <strong>Meble Nawrocki CMS</strong>, kliknij <strong>Authorize</strong>.</li>
+      <li>Po powrocie do panelu kliknij
+        <strong>Galeria → Zdjęcia realizacji</strong>. Dodaj jedno zdjęcie testowe,
+        jego opis i kategorię, a następnie zapisz wersję roboczą.</li>
+      <li>Sprawdź podgląd. Jeśli wszystko wygląda poprawnie, opublikuj zmianę.
+        Netlify powinien uruchomić nowe wdrożenie; jego postęp zobaczysz po kliknięciu
+        <strong>Deploys</strong> w projekcie Netlify.</li>
+    </ol>
+
+    <h3>Najczęstsze problemy</h3>
+    <ul>
+      <li><strong>Wracasz do ekranu logowania:</strong> sprawdź, czy callback w aplikacji
+        GitHub ma dokładnie wartość <code>https://api.netlify.com/auth/done</code>.</li>
+      <li><strong>Repository not found lub brak prawa zapisu:</strong> konto zalogowane
+        w panelu CMS musi mieć dostęp do <code>Cheatek/meble-nawrocki-1</code>. W repozytorium
+        na GitHubie otwórz <strong>Settings → Collaborators</strong> i nadaj temu kontu
+        rolę pozwalającą zapisywać zmiany.</li>
+      <li><strong>Zmiana nie pojawia się na stronie:</strong> w Netlify otwórz
+        <strong>Deploys</strong>, kliknij najnowsze wdrożenie i sprawdź, czy ma status
+        <strong>Published</strong>. Czerwony status oznacza błąd budowania.</li>
+      <li><strong>OAuth error lub site not found:</strong> sprawdź wartość
+        <code>CMS_SITE_DOMAIN</code>; musi to być dokładnie <code>meble-nawrocki.pl</code>.</li>
+    </ul>
+    <p>Dokumentacja źródłowa:
+      <a href="https://decapcms.org/docs/github-backend/">Decap CMS — GitHub backend</a>
+      oraz
+      <a href="https://docs.netlify.com/manage/security/secure-access-to-sites/oauth-provider-tokens/">
+        Netlify — OAuth provider tokens</a>.</p>
+  </section>
+
+  <section lang="en">
     <h2>Other hosting and local use</h2>
     <p>Run <code>npm ci</code>, <code>npm test</code> and <code>npm run build</code>
       from the repository root. Serve <code>_site</code> with a static HTTP server.
