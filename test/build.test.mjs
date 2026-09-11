@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, readdir, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { runInNewContext } from 'node:vm';
 import sharp from 'sharp';
 import {
   build, discoverImages, escapeHtml, imagePath, interpolateBranch, MAX_BYTES, optimizeImage,
@@ -241,7 +242,104 @@ test('frozen source fallback preserves the original migration independently of e
   }
   assert.match(fallback, /class="nospace gallery-grid"/);
   assert.doesNotMatch(fallback, /one_quarter|class="[^"]*\bfirst\b/);
-  assert.doesNotMatch(replaceGallery(template, renderGallery([], new Map())), /<img/);
+  const emptyTemplate = replaceGallery(template, renderGallery([], new Map()));
+  const emptyFallback = emptyTemplate.split('<!-- GALLERY:START -->')[1].split('<!-- GALLERY:END -->')[0];
+  assert.doesNotMatch(emptyFallback, /<img/);
+});
+
+test('gallery page progressively enhances image links with an accessible lightbox', async () => {
+  const template = await readFile(path.join(repository, 'gallery.html'), 'utf8');
+  const script = await readFile(path.join(repository, 'layout/scripts/gallery-lightbox.js'), 'utf8');
+  assert.match(template, /id="gallery-lightbox"[^>]*role="dialog"[^>]*aria-modal="true"[^>]*aria-describedby="gallery-lightbox-counter"[^>]*hidden/);
+  assert.match(template, /aria-label="Zamknij podgląd"/);
+  assert.match(template, /aria-label="Poprzednie zdjęcie"/);
+  assert.match(template, /aria-label="Następne zdjęcie"/);
+  assert.match(template, /src="layout\/scripts\/gallery-lightbox\.js"/);
+  assert.match(script, /event\.key === "Escape"/);
+  assert.match(script, /event\.key === "ArrowLeft"/);
+  assert.match(script, /event\.key === "ArrowRight"/);
+  assert.match(script, /returnFocus\.focus\(\)/);
+  assert.match(script, /% links\.length/);
+  assert.match(script, /gallery\.addEventListener\("click"/);
+  assert.match(script, /function getLinks\(\)/);
+});
+
+test('lightbox follows a gallery grid replaced with new CMS photos', async () => {
+  const script = await readFile(path.join(repository, 'layout/scripts/gallery-lightbox.js'), 'utf8');
+  let document;
+  function interactiveElement() {
+    return {
+      listeners: {},
+      addEventListener(type, listener) { this.listeners[type] = listener; },
+      focus() { document.activeElement = this; }
+    };
+  }
+  function link(href, alt) {
+    return {
+      href,
+      querySelector(selector) { return selector === 'img' ? { alt } : null; },
+      focus() { document.activeElement = this; }
+    };
+  }
+
+  let links = [link('images/old.jpg', 'Stare zdjęcie')];
+  const gallery = {
+    ...interactiveElement(),
+    querySelectorAll(selector) { return selector === '.gallery-grid a' ? links : []; },
+    contains(candidate) { return links.includes(candidate); }
+  };
+  const image = {
+    src: '',
+    alt: '',
+    removeAttribute(attribute) { if (attribute === 'src') this.src = ''; }
+  };
+  const counter = { textContent: '' };
+  const close = interactiveElement();
+  const previous = interactiveElement();
+  const next = interactiveElement();
+  const lightbox = {
+    ...interactiveElement(),
+    hidden: true,
+    querySelector(selector) {
+      return new Map([
+        ['img', image],
+        ['.gallery-lightbox-counter', counter],
+        ['.gallery-lightbox-close', close],
+        ['.gallery-lightbox-previous', previous],
+        ['.gallery-lightbox-next', next]
+      ]).get(selector);
+    }
+  };
+  const classes = new Set();
+  document = {
+    activeElement: null,
+    getElementById(id) { return id === 'gallery' ? gallery : id === 'gallery-lightbox' ? lightbox : null; },
+    body: {
+      classList: {
+        add(value) { classes.add(value); },
+        remove(value) { classes.delete(value); }
+      }
+    },
+    addEventListener() {}
+  };
+  runInNewContext(script, { document });
+
+  links = [
+    link('images/uploads/new-1.jpg', 'Nowe zdjęcie 1'),
+    link('images/uploads/new-2.jpg', 'Nowe zdjęcie 2')
+  ];
+  const preventDefault = () => {};
+  gallery.listeners.click({ target: { closest: () => links[1] }, preventDefault });
+  assert.equal(lightbox.hidden, false);
+  assert.equal(image.src, 'images/uploads/new-2.jpg');
+  assert.equal(image.alt, 'Nowe zdjęcie 2');
+  assert.equal(counter.textContent, 'Zdjęcie 2 z 2');
+  assert.equal(document.activeElement, close);
+  assert.ok(classes.has('gallery-lightbox-open'));
+
+  next.listeners.click();
+  assert.equal(image.src, 'images/uploads/new-1.jpg');
+  assert.equal(counter.textContent, 'Zdjęcie 1 z 2');
 });
 
 async function siteFixture(t, photos = [photo, photo]) {
