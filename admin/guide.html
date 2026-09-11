@@ -38,25 +38,21 @@
 
   <section>
     <h2>Jednorazowa konfiguracja logowania przez GitHub</h2>
-    <p>Te kroki wykonuje administrator strony tylko raz. Strona jest już wdrażana przez
-      Netlify, dlatego nie twórz drugiej witryny i nie zmieniaj serwerów DNS. Potrzebujesz
-      dostępu administracyjnego do projektu tej strony w Netlify oraz konta GitHub z prawem
-      zapisu do repozytorium <code>Cheatek/meble-nawrocki-1</code>.</p>
+    <p>Te kroki wykonuje administrator strony tylko raz. Publiczną stronę wdraża
+      <strong>Cloudflare Pages</strong>, natomiast projekt Netlify
+      <strong>sensational-bombolone-3b6d44</strong> obsługuje wyłącznie bezpieczne
+      logowanie GitHub OAuth. Nie zmieniaj serwerów DNS. Potrzebujesz dostępu do tego
+      projektu w Netlify oraz konta GitHub z prawem zapisu do repozytorium
+      <code>Cheatek/meble-nawrocki-1</code>.</p>
 
-    <h3>1. Sprawdź projekt strony w Netlify</h3>
+    <h3>1. Sprawdź pomocniczy projekt OAuth w Netlify</h3>
     <ol>
       <li>Wejdź na <a href="https://app.netlify.com/">app.netlify.com</a> i zaloguj się.</li>
-      <li>Kliknij <strong>Projects</strong>, a następnie projekt obsługujący domenę
-        <strong>meble-nawrocki.pl</strong>. Jeśli nie wiesz, który to projekt, otwieraj
-        projekty i sprawdzaj domenę widoczną pod nazwą projektu.</li>
-      <li>W lewym menu kliknij <strong>Project configuration</strong>, potem
-        <strong>Build &amp; deploy</strong> i <strong>Continuous deployment</strong>.</li>
-      <li>Sprawdź, czy połączone repozytorium to
-        <code>Cheatek/meble-nawrocki-1</code>, a gałąź produkcyjna to
-        <code>master</code>. Nie zmieniaj tych wartości.</li>
-      <li>Ustawienia budowania są zapisane w pliku <code>netlify.toml</code>:
-        Node.js 24, polecenie <code>npm run build</code> i katalog publikacji
-        <code>_site</code>. Nie ustawiaj publikacji bezpośrednio z katalogu repozytorium.</li>
+      <li>Kliknij <strong>Projects</strong>, a następnie projekt
+        <strong>sensational-bombolone-3b6d44</strong>. Jego adres to
+        <code>https://sensational-bombolone-3b6d44.netlify.app</code>.</li>
+      <li>Ten projekt służy jako broker OAuth. Publiczna domena
+        <strong>meble-nawrocki.pl</strong> pozostaje w Cloudflare Pages.</li>
     </ol>
 
     <h3>2. Utwórz aplikację OAuth na GitHubie</h3>
@@ -97,20 +93,16 @@
       instrukcji <strong>Netlify Identity</strong> ani <strong>Git Gateway</strong> —
       dotyczą one innego wariantu konfiguracji Decap CMS.</p>
 
-    <h3>4. Ustaw domenę CMS w Netlify</h3>
+    <h3>4. Sprawdź identyfikator witryny OAuth</h3>
     <ol>
-      <li>W projekcie Netlify kliknij <strong>Project configuration → Environment variables</strong>.</li>
-      <li>Kliknij <strong>Add a variable</strong> albo <strong>Add environment variable</strong>.</li>
-      <li>W polu <strong>Key</strong> wpisz <code>CMS_SITE_DOMAIN</code>, a w polu
-        <strong>Value</strong> wpisz <code>meble-nawrocki.pl</code> — bez
-        <code>https://</code>, ukośnika i dalszej części adresu.</li>
-      <li>Udostępnij zmienną dla produkcji i podglądów wdrożeń, następnie kliknij
-        <strong>Save</strong>.</li>
-      <li>Nie dodawaj zmiennej <code>CMS_BRANCH</code>. Produkcja automatycznie używa
-        właściwej gałęzi <code>master</code>.</li>
-      <li>Przejdź do <strong>Deploys</strong>, kliknij <strong>Trigger deploy</strong>,
-        potem <strong>Deploy site</strong>. Zaczekaj, aż najnowsze wdrożenie będzie miało
-        zielony status <strong>Published</strong>.</li>
+      <li>Nie dodawaj zmiennych <code>CMS_SITE_DOMAIN</code> ani
+        <code>CMS_BRANCH</code> w Netlify. Cloudflare ich nie odczytuje.</li>
+      <li>Konfiguracja CMS zawiera już identyfikator
+        <code>sensational-bombolone-3b6d44.netlify.app</code> i gałąź
+        <code>master</code>.</li>
+      <li>Po zmianie kodu wdrożenie produkcyjne sprawdzisz na GitHubie: otwórz
+        repozytorium, kliknij najnowszy commit i znajdź zielony status
+        <strong>Cloudflare Pages</strong>.</li>
     </ol>
 
     <h3>5. Sprawdź logowanie i publikację</h3>
@@ -124,8 +116,8 @@
         <strong>Galeria → Zdjęcia realizacji</strong>. Dodaj jedno zdjęcie testowe,
         jego opis i kategorię, a następnie zapisz wersję roboczą.</li>
       <li>Sprawdź podgląd. Jeśli wszystko wygląda poprawnie, opublikuj zmianę.
-        Netlify powinien uruchomić nowe wdrożenie; jego postęp zobaczysz po kliknięciu
-        <strong>Deploys</strong> w projekcie Netlify.</li>
+        Cloudflare Pages powinien uruchomić nowe wdrożenie; jego status zobaczysz przy
+        najnowszym commicie na GitHubie.</li>
     </ol>
 
     <h3>Najczęstsze problemy</h3>
@@ -136,11 +128,12 @@
         w panelu CMS musi mieć dostęp do <code>Cheatek/meble-nawrocki-1</code>. W repozytorium
         na GitHubie otwórz <strong>Settings → Collaborators</strong> i nadaj temu kontu
         rolę pozwalającą zapisywać zmiany.</li>
-      <li><strong>Zmiana nie pojawia się na stronie:</strong> w Netlify otwórz
-        <strong>Deploys</strong>, kliknij najnowsze wdrożenie i sprawdź, czy ma status
-        <strong>Published</strong>. Czerwony status oznacza błąd budowania.</li>
+      <li><strong>Zmiana nie pojawia się na stronie:</strong> na GitHubie otwórz najnowszy
+        commit i sprawdź status <strong>Cloudflare Pages</strong>. Czerwony status oznacza
+        błąd wdrożenia.</li>
       <li><strong>OAuth error lub site not found:</strong> sprawdź wartość
-        <code>CMS_SITE_DOMAIN</code>; musi to być dokładnie <code>meble-nawrocki.pl</code>.</li>
+        <code>site_domain</code> w pliku <code>admin/config.yml</code>; musi to być dokładnie
+        <code>sensational-bombolone-3b6d44.netlify.app</code>.</li>
     </ul>
     <p>Dokumentacja źródłowa:
       <a href="https://decapcms.org/docs/github-backend/">Decap CMS — GitHub backend</a>

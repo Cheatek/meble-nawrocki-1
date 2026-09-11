@@ -96,10 +96,11 @@ export function resolveBranch({ branch, env = process.env, root = process.cwd() 
 export function interpolateBranch(config, branch) {
   if (typeof branch !== 'string' || !branch || branch === 'HEAD' ||
       /[\u0000-\u001f\u007f]/u.test(branch)) throw new Error('Invalid CMS branch');
-  if (!/^(\s*branch:\s*)__CMS_BRANCH__\s*$/m.test(config)) {
-    throw new Error('CMS config must contain an unquoted __CMS_BRANCH__ branch token');
+  const pattern = /^([ \t]{2}branch:[ \t]*)([^#\r\n]*?)[ \t]*$/gm;
+  if ([...config.matchAll(pattern)].length !== 1) {
+    throw new Error('CMS config must contain exactly one backend branch');
   }
-  return config.replace('__CMS_BRANCH__', () => JSON.stringify(branch));
+  return config.replace(pattern, (_, prefix) => prefix + JSON.stringify(branch));
 }
 
 export function resolveSiteDomain(env = process.env) {
@@ -115,11 +116,13 @@ export function resolveSiteDomain(env = process.env) {
 export function interpolateSiteDomain(config, domain) {
   if (typeof domain !== 'string') throw new Error('CMS site domain must be a string');
   resolveSiteDomain({ CMS_SITE_DOMAIN: domain });
-  if (config.split('__CMS_SITE_DOMAIN__').length !== 2 ||
-      !/^\s*site_domain:\s*__CMS_SITE_DOMAIN__\s*$/m.test(config)) {
-    throw new Error('CMS config must contain one unquoted __CMS_SITE_DOMAIN__ site_domain token');
+  const pattern = /^([ \t]{2}site_domain:[ \t]*)([^#\r\n]*?)[ \t]*$/gm;
+  const matches = [...config.matchAll(pattern)];
+  if (matches.length !== 1) {
+    throw new Error('CMS config must contain exactly one backend site_domain');
   }
-  return config.replace('__CMS_SITE_DOMAIN__', () => JSON.stringify(domain));
+  if (!domain && matches[0][2].trim() !== '__CMS_SITE_DOMAIN__') return config;
+  return config.replace(pattern, (_, prefix) => prefix + JSON.stringify(domain));
 }
 
 export function discoverImages(html) {

@@ -92,11 +92,14 @@ test('branch selection respects explicit configuration and each hosting platform
   for (const branch of ['', 'HEAD', 'bad\nbranch']) assert.throws(() => resolveBranch({ branch, env: {} }));
 });
 
-test('branch interpolation is safely JSON quoted inside YAML', () => {
+test('branch configuration is safely replaced and JSON quoted inside YAML', () => {
   const config = 'backend:\n  branch: __CMS_BRANCH__\n  name: git-gateway\n';
   const branch = 'feature/"quoted"#value';
   assert.equal(interpolateBranch(config, branch), `backend:\n  branch: ${JSON.stringify(branch)}\n  name: git-gateway\n`);
-  assert.throws(() => interpolateBranch('branch: "__CMS_BRANCH__"', 'main'));
+  assert.equal(interpolateBranch('backend:\n  branch: master\n', 'preview'),
+    'backend:\n  branch: "preview"\n');
+  assert.throws(() => interpolateBranch('branch: master\n', 'main'));
+  assert.throws(() => interpolateBranch(config + config, 'main'));
   assert.throws(() => interpolateBranch(config, 'HEAD'));
   assert.throws(() => interpolateBranch(config, 'main\ninjected: true'));
 });
@@ -114,13 +117,17 @@ test('CMS site domain resolves explicit overrides, Netlify URLs and empty local 
   assert.throws(() => resolveSiteDomain({ URL: 'not a URL' }));
 });
 
-test('CMS site domain interpolation quotes values and requires an unquoted token', () => {
+test('CMS site domain configuration is safely replaced and JSON quoted', () => {
   const config = 'backend:\n  site_domain: __CMS_SITE_DOMAIN__\n';
   assert.equal(interpolateSiteDomain(config, ''), 'backend:\n  site_domain: ""\n');
   assert.equal(interpolateSiteDomain(config, 'site.netlify.app'), 'backend:\n  site_domain: "site.netlify.app"\n');
+  assert.equal(interpolateSiteDomain('backend:\n  site_domain: old.netlify.app\n', 'site.netlify.app'),
+    'backend:\n  site_domain: "site.netlify.app"\n');
+  assert.equal(interpolateSiteDomain('backend:\n  site_domain: existing.netlify.app\n', ''),
+    'backend:\n  site_domain: existing.netlify.app\n');
   assert.throws(() => interpolateSiteDomain(config, 'site"\ninjected'));
   assert.throws(() => interpolateSiteDomain(config, undefined));
-  assert.throws(() => interpolateSiteDomain('site_domain: "__CMS_SITE_DOMAIN__"', 'site.netlify.app'));
+  assert.throws(() => interpolateSiteDomain('site_domain: old.netlify.app', 'site.netlify.app'));
   assert.throws(() => interpolateSiteDomain(config + config, 'site.netlify.app'));
 });
 
