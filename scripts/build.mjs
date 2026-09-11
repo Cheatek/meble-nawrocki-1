@@ -187,7 +187,10 @@ export async function build({ root = process.cwd(), branch, env = process.env } 
   for (const page of SITE_PAGES) {
     let html = await readFile(path.join(root, page), 'utf8');
     html = html.replace(/(\b(?:src|href)\s*=\s*["'])\.\.\/layout\//gi, '$1layout/');
-    if (page === 'gallery.html') html = replaceGallery(html, '');
+    if (page === 'gallery.html') {
+      html = replaceGallery(html, '');
+      html = html.replace(/\s*<script src="layout\/scripts\/gallery-data\.js"><\/script>/, '');
+    }
     pages.set(page, html);
   }
   const galleryImages = new Set(photos.map(photo => photo.image));
