@@ -103,28 +103,6 @@ export function interpolateBranch(config, branch) {
   return config.replace(pattern, (_, prefix) => prefix + JSON.stringify(branch));
 }
 
-export function resolveSiteDomain(env = process.env) {
-  const domain = env.CMS_SITE_DOMAIN || (env.URL ? new URL(env.URL).hostname : '');
-  if (typeof domain !== 'string' || domain.length > 253 ||
-      (domain && domain.split('.').some(label =>
-        !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(label)))) {
-    throw new Error('CMS_SITE_DOMAIN must be a hostname without scheme, path, port or credentials');
-  }
-  return domain;
-}
-
-export function interpolateSiteDomain(config, domain) {
-  if (typeof domain !== 'string') throw new Error('CMS site domain must be a string');
-  resolveSiteDomain({ CMS_SITE_DOMAIN: domain });
-  const pattern = /^([ \t]{2}site_domain:[ \t]*)([^#\r\n]*?)[ \t]*$/gm;
-  const matches = [...config.matchAll(pattern)];
-  if (matches.length !== 1) {
-    throw new Error('CMS config must contain exactly one backend site_domain');
-  }
-  if (!domain && matches[0][2].trim() !== '__CMS_SITE_DOMAIN__') return config;
-  return config.replace(pattern, (_, prefix) => prefix + JSON.stringify(domain));
-}
-
 export function discoverImages(html) {
   const found = new Set();
   const references = [
@@ -201,9 +179,9 @@ export async function build({ root = process.cwd(), branch, env = process.env } 
   root = await realpath(root);
   const photos = validateGallery(JSON.parse(await readFile(path.join(root, 'data/gallery.json'), 'utf8')));
   const cmsBranch = resolveBranch({ root, branch, env });
-  const config = interpolateSiteDomain(
-    interpolateBranch(await readFile(path.join(root, 'admin/config.yml'), 'utf8'), cmsBranch),
-    resolveSiteDomain(env)
+  const config = interpolateBranch(
+    await readFile(path.join(root, 'admin/config.yml'), 'utf8'),
+    cmsBranch
   );
   const pages = new Map();
   for (const page of SITE_PAGES) {

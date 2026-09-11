@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Edytor galerii — Meble Nawrocki</title>
+  <script>
+    if (window.location.hostname === 'meble-nawrocki.pl' ||
+        window.location.hostname === 'www.meble-nawrocki.pl') {
+      window.location.replace(
+        'https://sensational-bombolone-3b6d44.netlify.app/admin/' +
+        window.location.search + window.location.hash
+      );
+    }
+  </script>
 </head>
 <body>
   <p>Edytor galerii wymaga logowania do GitHub i skonfigurowanego hostingu.

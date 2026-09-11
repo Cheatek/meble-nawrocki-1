@@ -5,8 +5,8 @@ import { mkdir, readFile, readdir, rm, stat, symlink, writeFile } from 'node:fs/
 import path from 'node:path';
 import sharp from 'sharp';
 import {
-  build, discoverImages, escapeHtml, imagePath, interpolateBranch, interpolateSiteDomain, MAX_BYTES,
-  optimizeImage, readImage, renderGallery, replaceGallery, resolveBranch, resolveSiteDomain, validateGallery
+  build, discoverImages, escapeHtml, imagePath, interpolateBranch, MAX_BYTES, optimizeImage,
+  readImage, renderGallery, replaceGallery, resolveBranch, validateGallery
 } from '../scripts/build.mjs';
 
 const repository = path.resolve(import.meta.dirname, '..');
@@ -102,33 +102,6 @@ test('branch configuration is safely replaced and JSON quoted inside YAML', () =
   assert.throws(() => interpolateBranch(config + config, 'main'));
   assert.throws(() => interpolateBranch(config, 'HEAD'));
   assert.throws(() => interpolateBranch(config, 'main\ninjected: true'));
-});
-
-test('CMS site domain resolves explicit overrides, Netlify URLs and empty local setup', () => {
-  assert.equal(resolveSiteDomain({}), '');
-  assert.equal(resolveSiteDomain({ CMS_SITE_DOMAIN: 'gallery.example.org', URL: 'https://other.example.org' }), 'gallery.example.org');
-  assert.equal(resolveSiteDomain({ URL: 'https://site-name.netlify.app/path' }), 'site-name.netlify.app');
-  assert.equal(resolveSiteDomain({ CMS_SITE_DOMAIN: '', URL: 'https://site.netlify.app' }), 'site.netlify.app');
-  for (const domain of [
-    'https://site.netlify.app', 'site.netlify.app/path', 'user@site.netlify.app',
-    'site.netlify.app:443', '-site.example', 'site-.example', 'site..example',
-    'site.example\nbad', ' site.example', 'site.example?key=1', 'a'.repeat(64) + '.example'
-  ]) assert.throws(() => resolveSiteDomain({ CMS_SITE_DOMAIN: domain }), /must be a hostname/);
-  assert.throws(() => resolveSiteDomain({ URL: 'not a URL' }));
-});
-
-test('CMS site domain configuration is safely replaced and JSON quoted', () => {
-  const config = 'backend:\n  site_domain: __CMS_SITE_DOMAIN__\n';
-  assert.equal(interpolateSiteDomain(config, ''), 'backend:\n  site_domain: ""\n');
-  assert.equal(interpolateSiteDomain(config, 'site.netlify.app'), 'backend:\n  site_domain: "site.netlify.app"\n');
-  assert.equal(interpolateSiteDomain('backend:\n  site_domain: old.netlify.app\n', 'site.netlify.app'),
-    'backend:\n  site_domain: "site.netlify.app"\n');
-  assert.equal(interpolateSiteDomain('backend:\n  site_domain: existing.netlify.app\n', ''),
-    'backend:\n  site_domain: existing.netlify.app\n');
-  assert.throws(() => interpolateSiteDomain(config, 'site"\ninjected'));
-  assert.throws(() => interpolateSiteDomain(config, undefined));
-  assert.throws(() => interpolateSiteDomain('site_domain: old.netlify.app', 'site.netlify.app'));
-  assert.throws(() => interpolateSiteDomain(config + config, 'site.netlify.app'));
 });
 
 test('shared image discovery includes HTML image links and background URLs', () => {
@@ -266,7 +239,8 @@ async function siteFixture(t, photos = [photo, photo]) {
     await mkdir(path.join(root, directory), { recursive: true });
   }
   await writeFile(path.join(root, 'data/gallery.json'), JSON.stringify({ photos }));
-  await writeFile(path.join(root, 'admin/config.yml'), 'backend:\n  branch: __CMS_BRANCH__\n  site_domain: __CMS_SITE_DOMAIN__\n');
+  await writeFile(path.join(root, 'admin/config.yml'),
+    'backend:\n  branch: master\n  site_domain: cms.example.test\n');
   await writeFile(path.join(root, 'admin/index.html'), '<h1>CMS</h1>');
   await writeFile(path.join(root, 'layout/styles/layout.css'), 'body{}');
   await writeFile(path.join(root, 'index.html'), '<img src="images/shared.jpg">');
@@ -283,13 +257,13 @@ async function siteFixture(t, photos = [photo, photo]) {
 
 test('complete build produces only static public assets and reuses duplicate photos', async t => {
   const root = await siteFixture(t);
-  const result = await build({ root, branch: 'feature/gallery', env: { CMS_SITE_DOMAIN: 'site.netlify.app' } });
+  const result = await build({ root, branch: 'feature/gallery' });
   assert.equal(result.photos, 2);
   assert.equal(result.images, 2);
   assert.deepEqual((await readdir(result.output)).sort(), ['admin', 'contact.html', 'gallery.html', 'images', 'index.html', 'layout']);
   assert.equal((await readdir(path.join(result.output, 'images/thumbnails'))).length, 1);
   assert.equal(await readFile(path.join(result.output, 'admin/config.yml'), 'utf8'),
-    'backend:\n  branch: "feature/gallery"\n  site_domain: "site.netlify.app"\n');
+    'backend:\n  branch: "feature/gallery"\n  site_domain: cms.example.test\n');
   assert.match(await readFile(path.join(result.output, 'contact.html'), 'utf8'), /href="layout\/styles\/layout.css"/);
   const html = await readFile(path.join(result.output, 'gallery.html'), 'utf8');
   assert.equal([...html.matchAll(/<li>/g)].length, 2);
@@ -302,7 +276,8 @@ test('complete build produces only static public assets and reuses duplicate pho
   }
   await writeFile(path.join(result.output, 'obsolete.txt'), 'old output');
   await build({ root, branch: 'feature/gallery', env: {} });
-  assert.match(await readFile(path.join(result.output, 'admin/config.yml'), 'utf8'), /site_domain: ""/);
+  assert.match(await readFile(path.join(result.output, 'admin/config.yml'), 'utf8'),
+    /site_domain: cms\.example\.test/);
   await assert.rejects(stat(path.join(result.output, 'obsolete.txt')), /ENOENT/);
 });
 
