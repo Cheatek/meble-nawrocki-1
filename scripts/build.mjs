@@ -66,7 +66,7 @@ export function renderGallery(photos, assets) {
   return `<ul class="nospace gallery-grid">\n${photos.map(photo => {
     const asset = assets.get(photo.image);
     if (!asset) throw new Error(`Missing optimized image: ${photo.image}`);
-    return `  <li><a href="${escapeHtml(imageUrl(photo.image))}"><img src="${escapeHtml(asset.thumbnail)}" alt="${escapeHtml(photo.alt)}" width="${asset.width}" height="${asset.height}" loading="lazy" decoding="async"></a><span class="gallery-category">${escapeHtml(photo.category)}</span></li>`;
+    return `  <li><a href="${escapeHtml(imageUrl(photo.image))}"><img src="${escapeHtml(asset.thumbnail)}" alt="${escapeHtml(photo.alt)}" width="${asset.width}" height="${asset.height}" loading="lazy" decoding="async"></a></li>`;
   }).join('\n')}\n</ul>`;
 }
 

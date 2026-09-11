@@ -321,7 +321,6 @@ td{border-width:0 1px;}
 #gallery .gallery-grid li{min-width:0; margin:0;}
 #gallery .gallery-grid a{display:block;}
 #gallery .gallery-grid img{display:block; width:100%; height:auto; aspect-ratio:4 / 3; object-fit:contain; background:#F4F4F4;}
-#gallery .gallery-category{display:block; margin-top:8px; font-size:.875rem;}
 #gallery .gallery-empty{padding:24px 0;}
 
 

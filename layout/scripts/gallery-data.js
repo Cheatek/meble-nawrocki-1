@@ -28,7 +28,6 @@
       var item = document.createElement('li');
       var link = document.createElement('a');
       var image = document.createElement('img');
-      var category = document.createElement('span');
       var path = photo.image.replace(/^\//, '');
 
       link.href = path;
@@ -36,12 +35,9 @@
       image.alt = photo.alt;
       image.loading = 'lazy';
       image.decoding = 'async';
-      category.className = 'gallery-category';
-      category.textContent = photo.category;
 
       link.appendChild(image);
       item.appendChild(link);
-      item.appendChild(category);
       list.appendChild(item);
     });
     return list;
