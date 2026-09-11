@@ -241,7 +241,9 @@ test('frozen source fallback preserves the original migration independently of e
   }
   assert.match(fallback, /class="nospace gallery-grid"/);
   assert.doesNotMatch(fallback, /one_quarter|class="[^"]*\bfirst\b/);
-  assert.doesNotMatch(replaceGallery(template, renderGallery([], new Map())), /<img/);
+  const replaced = replaceGallery(template, renderGallery([], new Map()));
+  const generated = replaced.split('<!-- GALLERY:START -->')[1].split('<!-- GALLERY:END -->')[0];
+  assert.doesNotMatch(generated, /<img/);
 });
 
 async function siteFixture(t, photos = [photo, photo]) {
