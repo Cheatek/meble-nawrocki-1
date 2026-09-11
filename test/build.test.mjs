@@ -254,7 +254,8 @@ test('gallery page progressively enhances image links with an accessible lightbo
   assert.match(template, /aria-label="Zamknij podgląd"/);
   assert.match(template, /aria-label="Poprzednie zdjęcie"/);
   assert.match(template, /aria-label="Następne zdjęcie"/);
-  assert.match(template, /src="layout\/scripts\/gallery-lightbox\.js"/);
+  assert.match(template, /href="layout\/styles\/layout\.css\?v=20260912-1"/);
+  assert.match(template, /src="layout\/scripts\/gallery-lightbox\.js\?v=20260912-1"/);
   assert.match(script, /event\.key === "Escape"/);
   assert.match(script, /event\.key === "ArrowLeft"/);
   assert.match(script, /event\.key === "ArrowRight"/);
