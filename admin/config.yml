@@ -46,7 +46,7 @@ collections:
                   config:
                     max_file_size: 20971520
                 pattern:
-                  - '^/?images/(galery|uploads)/[^\\?#]+\.(jpg|jpeg|png|webp|JPG|JPEG|PNG|WEBP)$'
+                  - '\.(jpg|jpeg|png|webp|JPG|JPEG|PNG|WEBP)$'
                   - Wybierz lokalne zdjęcie JPEG, PNG lub WebP.
               - name: alt
                 label: Opis zdjęcia

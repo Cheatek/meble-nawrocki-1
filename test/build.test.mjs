@@ -104,6 +104,17 @@ test('branch configuration is safely replaced and JSON quoted inside YAML', () =
   assert.throws(() => interpolateBranch(config, 'main\ninjected: true'));
 });
 
+test('CMS image field accepts JPG, JPEG, PNG and WebP paths', async () => {
+  const config = await readFile(path.join(repository, 'admin/config.yml'), 'utf8');
+  const [, source] = config.match(/pattern:\s*\n\s+- '([^']+)'/) ?? [];
+  assert.ok(source, 'Image field pattern is missing');
+  const imagePattern = new RegExp(source);
+  for (const image of ['photo.jpg', '/images/uploads/photo.jpeg', 'photo.PNG', 'photo.WEBP']) {
+    assert.match(image, imagePattern);
+  }
+  assert.doesNotMatch('photo.gif', imagePattern);
+});
+
 test('shared image discovery includes HTML image links and background URLs', () => {
   assert.deepEqual([...discoverImages(`<img src="images/a.JPG"><a href="images/b.webp">x</a>
     <div style="background-image:url('images/bg.png')"></div><script src="layout/a.js"></script>`)],
