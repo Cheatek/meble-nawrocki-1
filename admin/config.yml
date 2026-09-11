@@ -11,7 +11,6 @@ locale: pl
 media_folder: images/uploads
 public_folder: /images/uploads
 media_library:
-  name: 'library'
   config:
     max_file_size: 20971520
 slug:
