@@ -273,6 +273,81 @@ test('contact page exposes phone and email actions everywhere they are shown', a
   assert.match(html, /aria-label="Wyślij e-mail do Meble Nawrocki"/);
 });
 
+test('contact form collects required enquiry details through the free email endpoint', async () => {
+  const html = await readFile(path.join(repository, 'contact.html'), 'utf8');
+  assert.match(html, /<form id="contact-form"[^>]*action="https:\/\/formsubmit\.co\/nawrockimaciejmeble@gmail\.com"[^>]*method="post"/);
+  for (const field of ['contact-name', 'contact-phone', 'contact-email', 'contact-city', 'contact-description', 'contact-consent']) {
+    assert.match(html, new RegExp(`id="${field}"[^>]*required`));
+  }
+  assert.match(html, /name="_next" value="https:\/\/www\.meble-nawrocki\.pl\/contact\?sent=1#formularz"/);
+  assert.match(html, /name="_template" value="table"/);
+  assert.match(html, /name="_honey"/);
+  assert.match(html, /data-word-limit="1000"/);
+  assert.match(html, /src="layout\/scripts\/contact-form\.js\?v=20260912-1"/);
+  assert.match(html, /<!--email_off-->[\s\S]*action="https:\/\/formsubmit\.co\/nawrockimaciejmeble@gmail\.com"[\s\S]*<!--\/email_off-->/);
+});
+
+test('contact description enforces the exact 1000-word limit', async () => {
+  const script = await readFile(path.join(repository, 'layout/scripts/contact-form.js'), 'utf8');
+  let validity = '';
+  let submitted = false;
+  const listeners = {};
+  const classes = new Set();
+  const description = {
+    value: '',
+    addEventListener(type, listener) { listeners[type] = listener; },
+    getAttribute(name) { return name === 'data-word-limit' ? '1000' : null; },
+    setCustomValidity(message) { validity = message; }
+  };
+  const counter = {
+    textContent: '',
+    classList: {
+      toggle(name, enabled) { enabled ? classes.add(name) : classes.delete(name); }
+    }
+  };
+  const submitButton = { disabled: false, textContent: 'Wyślij zapytanie' };
+  const success = {
+    hidden: true,
+    focused: false,
+    focus() { this.focused = true; }
+  };
+  const form = {
+    addEventListener(type, listener) { listeners[type] = listener; },
+    querySelector() { return submitButton; },
+    checkValidity() { return !validity; },
+    reportValidity() {}
+  };
+  const document = {
+    getElementById(id) {
+      return new Map([
+        ['contact-form', form],
+        ['contact-description', description],
+        ['contact-word-count', counter],
+        ['contact-form-success', success]
+      ]).get(id);
+    }
+  };
+  runInNewContext(script, {
+    document,
+    window: { location: { search: '?sent=1' } },
+    URLSearchParams
+  });
+  assert.equal(success.hidden, false);
+  assert.equal(success.focused, true);
+
+  description.value = Array(1000).fill('słowo').join(' ');
+  listeners.input();
+  assert.equal(validity, '');
+  assert.equal(counter.textContent, 'Liczba słów: 1000 / 1000');
+  description.value += ' za-dużo';
+  listeners.input();
+  assert.match(validity, /maksymalnie 1000 słów/);
+  assert.ok(classes.has('limit-exceeded'));
+  listeners.submit({ preventDefault() { submitted = true; } });
+  assert.equal(submitted, true);
+  assert.equal(submitButton.disabled, false);
+});
+
 test('lightbox follows a gallery grid replaced with new CMS photos', async () => {
   const script = await readFile(path.join(repository, 'layout/scripts/gallery-lightbox.js'), 'utf8');
   let document;
