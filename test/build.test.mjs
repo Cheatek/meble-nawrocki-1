@@ -265,6 +265,14 @@ test('gallery page progressively enhances image links with an accessible lightbo
   assert.match(script, /function getLinks\(\)/);
 });
 
+test('contact page exposes phone and email actions everywhere they are shown', async () => {
+  const html = await readFile(path.join(repository, 'contact.html'), 'utf8');
+  assert.equal([...html.matchAll(/href="tel:\+48601776057"/g)].length, 5);
+  assert.equal([...html.matchAll(/href="mailto:nawrockimaciejmeble@gmail\.com"/g)].length, 5);
+  assert.match(html, /aria-label="Zadzwoń pod numer \+48 601 776 057"/);
+  assert.match(html, /aria-label="Wyślij e-mail do Meble Nawrocki"/);
+});
+
 test('lightbox follows a gallery grid replaced with new CMS photos', async () => {
   const script = await readFile(path.join(repository, 'layout/scripts/gallery-lightbox.js'), 'utf8');
   let document;
