@@ -3,7 +3,7 @@
 <title>Meble Nawrocki</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<link href="layout/styles/layout.css" rel="stylesheet" type="text/css" media="all">
+<link href="layout/styles/layout.css?v=20260912-3" rel="stylesheet" type="text/css" media="all">
 </head>
 <body id="top">
   <div class="bgded overlay" style="background-image:url('images/galery/bg2.jpg');"> 
@@ -49,7 +49,68 @@
     </article>
   </div>
 </div>
-  
+
+<div class="wrapper row3">
+  <main class="hoc container clear">
+    <section id="formularz" class="contact-form-section" aria-labelledby="contact-form-heading">
+      <header class="sectiontitle contact-form-heading">
+        <h2 id="contact-form-heading" class="heading">Wyślij zapytanie</h2>
+        <p>Opisz, jakich mebli potrzebujesz. Skontaktujemy się, aby omówić szczegóły realizacji.</p>
+      </header>
+      <div id="contact-form-success" class="contact-form-status" role="status" tabindex="-1" hidden>
+        Dziękujemy. Wiadomość została wysłana. Skontaktujemy się z Tobą możliwie szybko.
+      </div>
+      <!--email_off-->
+      <form id="contact-form" class="contact-form" action="https://formsubmit.co/nawrockimaciejmeble@gmail.com" method="post">
+        <input type="hidden" name="_subject" value="Nowe zapytanie ze strony Meble Nawrocki">
+        <input type="hidden" name="_next" value="https://www.meble-nawrocki.pl/contact?sent=1#formularz">
+        <input type="hidden" name="_template" value="table">
+        <div class="contact-form-honey" aria-hidden="true">
+          <label for="contact-website">Pozostaw to pole puste</label>
+          <input id="contact-website" type="text" name="_honey" tabindex="-1" autocomplete="off">
+        </div>
+        <div class="contact-form-grid">
+          <div class="contact-form-field">
+            <label for="contact-name">Imię i nazwisko <span aria-hidden="true">*</span></label>
+            <input id="contact-name" type="text" name="Imię i nazwisko" autocomplete="name" maxlength="100" required>
+          </div>
+          <div class="contact-form-field">
+            <label for="contact-phone">Telefon kontaktowy <span aria-hidden="true">*</span></label>
+            <input id="contact-phone" type="tel" name="Telefon kontaktowy" autocomplete="tel" inputmode="tel" pattern="[+0-9 ()-]{7,20}" maxlength="20" title="Wpisz poprawny numer telefonu" required>
+          </div>
+          <div class="contact-form-field">
+            <label for="contact-email">E-mail <span aria-hidden="true">*</span></label>
+            <input id="contact-email" type="email" name="email" autocomplete="email" maxlength="254" required>
+          </div>
+          <div class="contact-form-field">
+            <label for="contact-city">Miejscowość <span aria-hidden="true">*</span></label>
+            <input id="contact-city" type="text" name="Miejscowość" autocomplete="address-level2" maxlength="100" required>
+          </div>
+          <div class="contact-form-field contact-form-field-wide">
+            <label for="contact-description">Opis zapytania <span aria-hidden="true">*</span></label>
+            <textarea id="contact-description" name="Opis zapytania" rows="10" data-word-limit="1000" aria-describedby="contact-description-help contact-word-count" required></textarea>
+            <div class="contact-form-meta">
+              <small id="contact-description-help">Maksymalnie 1000 słów.</small>
+              <small id="contact-word-count" class="contact-form-word-count" aria-live="polite">Liczba słów: 0 / 1000</small>
+            </div>
+          </div>
+          <div class="contact-form-field contact-form-field-wide">
+            <label class="contact-form-consent" for="contact-consent">
+              <input id="contact-consent" type="checkbox" name="Zgoda na kontakt" value="Tak" required>
+              <span>Wyrażam zgodę na wykorzystanie podanych danych wyłącznie w celu odpowiedzi na moje zapytanie. <span aria-hidden="true">*</span></span>
+            </label>
+          </div>
+        </div>
+        <div class="contact-form-actions">
+          <button class="btn" type="submit">Wyślij zapytanie</button>
+          <small>Pola oznaczone * są wymagane. Formularz jest chroniony przed spamem przez FormSubmit.</small>
+        </div>
+      </form>
+      <!--/email_off-->
+    </section>
+  </main>
+</div>
+
 <div class="bgded overlay row4" style="background-color: black">
   <footer id="footer" class="hoc clear"> 
     <div id="ctdetails" class="clear">
@@ -84,5 +145,6 @@
 <script src="../layout/scripts/jquery.min.js"></script>
 <script src="../layout/scripts/jquery.backtotop.js"></script>
 <script src="../layout/scripts/jquery.mobilemenu.js"></script>
+<script src="layout/scripts/contact-form.js?v=20260912-1"></script>
 </body>
 </html>
